@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PULSE — India Market Intelligence</title>
+<meta name="description" content="AI-curated global market news with India-first implications for retail investors."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ── RESET ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0d0b;
+  --surface:#161614;
+  --surface2:#1e1e1b;
+  --border:rgba(255,255,255,0.07);
+  --border-strong:rgba(255,255,255,0.14);
+  --text:#f0ede6;
+  --muted:#8a8880;
+  --hint:#4a4a47;
+  --amber:#e8a020;
+  --amber-dim:rgba(232,160,32,0.12);
+  --green:#4caf7d;
+  --green-dim:rgba(76,175,125,0.1);
+  --red:#e05555;
+  --red-dim:rgba(224,85,85,0.1);
+  --blue:#5b9bd5;
+  --radius:12px;
+  --radius-sm:7px;
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-weight:400;
+  min-height:100vh;
+  line-height:1.6;
+}
+
+/* ── HEADER ── */
+header{
+  border-bottom:0.5px solid var(--border);
+  padding:0 32px;
+  height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  background:rgba(13,13,11,0.92);
+  backdrop-filter:blur(12px);
+  z-index:100;
+}
+.wordmark{
+  font-family:'Playfair Display',serif;
+  font-size:20px;
+  font-weight:700;
+  letter-spacing:-0.3px;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.wordmark-dot{
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--amber);
+}
+.header-right{
+  font-size:11px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--hint);
+  font-weight:500;
+}
+
+/* ── HERO ── */
+.hero{
+  padding:52px 32px 36px;
+  max-width:980px;
+  margin:0 auto;
+  border-bottom:0.5px solid var(--border);
+}
+.hero-label{
+  font-size:11px;
+  letter-spacing:2.5px;
+  text-transform:uppercase;
+  color:var(--amber);
+  font-weight:500;
+  margin-bottom:14px;
+}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(28px,4vw,44px);
+  font-weight:700;
+  line-height:1.18;
+  color:var(--text);
+  margin-bottom:14px;
+  max-width:640px;
+}
+.hero-sub{
+  font-size:15px;
+  color:var(--muted);
+  max-width:520px;
+  line-height:1.7;
+}
+
+/* ── SECTOR SIGNALS ── */
+.signals-section{
+  max-width:980px;
+  margin:0 auto;
+  padding:28px 32px;
+  border-bottom:0.5px solid var(--border);
+}
+.section-label{
+  font-size:11px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--hint);
+  font-weight:500;
+  margin-bottom:16px;
+}
+.signals-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.signal-chip{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 13px;
+  border-radius:99px;
+  border:0.5px solid var(--border-strong);
+  background:var(--surface);
+  font-size:12.5px;
+  font-weight:400;
+}
+.signal-chip.positive{border-color:rgba(76,175,125,0.3);background:var(--green-dim);}
+.signal-chip.negative{border-color:rgba(224,85,85,0.3);background:var(--red-dim);}
+.signal-chip.watch{border-color:rgba(232,160,32,0.3);background:var(--amber-dim);}
+.signal-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.signal-chip.positive .signal-dot{background:var(--green);}
+.signal-chip.negative .signal-dot{background:var(--red);}
+.signal-chip.watch .signal-dot{background:var(--amber);}
+.signal-name{color:var(--text);}
+.signal-label{font-size:10.5px;color:var(--muted);text-transform:capitalize;}
+.signals-empty{font-size:13px;color:var(--hint);}
+
+/* ── MAIN LAYOUT ── */
+.main{
+  max-width:980px;
+  margin:0 auto;
+  padding:28px 32px 80px;
+}
+
+/* ── TOPIC FILTER ── */
+.filter-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-bottom:28px;
+}
+.topic-btn{
+  font-size:12.5px;
+  padding:6px 15px;
+  border-radius:99px;
+  border:0.5px solid var(--border-strong);
+  background:transparent;
+  color:var(--muted);
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  transition:all 0.15s;
+  font-weight:400;
+}
+.topic-btn:hover{background:var(--surface2);color:var(--text);}
+.topic-btn.active{
+  background:var(--amber);
+  border-color:var(--amber);
+  color:#000;
+  font-weight:500;
+}
+
+/* ── ARTICLES ── */
+.articles{display:flex;flex-direction:column;gap:1px;background:var(--border);}
+
+.card{
+  background:var(--bg);
+  padding:28px 0;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+  animation:fadein 0.3s ease both;
+  cursor:default;
+  transition:background 0.15s;
+}
+.card:hover{background:var(--surface);}
+@keyframes fadein{
+  from{opacity:0;transform:translateY(5px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.card-meta-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.topic-tag{
+  font-size:10.5px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--amber);
+  font-weight:500;
+}
+.source-date{
+  font-size:11.5px;
+  color:var(--hint);
+}
+.sentiment-badge{
+  font-size:11px;
+  padding:2px 9px;
+  border-radius:99px;
+  font-weight:500;
+  margin-left:auto;
+}
+.sentiment-badge.positive{background:var(--green-dim);color:var(--green);}
+.sentiment-badge.negative{background:var(--red-dim);color:var(--red);}
+.sentiment-badge.neutral{background:var(--surface2);color:var(--muted);}
+
+.card-title{
+  font-family:'Playfair Display',serif;
+  font-size:20px;
+  font-weight:700;
+  line-height:1.35;
+  color:var(--text);
+}
+
+.card-summary{
+  font-size:14px;
+  color:var(--muted);
+  line-height:1.72;
+}
+
+.card-key-fact{
+  font-family:'DM Mono',monospace;
+  font-size:12px;
+  color:var(--amber);
+  background:var(--amber-dim);
+  border-left:2px solid var(--amber);
+  padding:8px 12px;
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* India Impact + Historical Echo */
+.card-insights{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+@media(max-width:600px){.card-insights{grid-template-columns:1fr;}}
+
+.insight-box{
+  padding:13px 15px;
+  border-radius:var(--radius-sm);
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+.insight-box.india{
+  background:rgba(91,155,213,0.08);
+  border:0.5px solid rgba(91,155,213,0.2);
+}
+.insight-box.echo{
+  background:var(--surface2);
+  border:0.5px solid var(--border-strong);
+}
+.insight-label{
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  font-weight:500;
+}
+.insight-box.india .insight-label{color:var(--blue);}
+.insight-box.echo .insight-label{color:var(--muted);}
+.insight-text{
+  font-size:13px;
+  line-height:1.6;
+}
+.insight-box.india .insight-text{color:#a8c8e8;}
+.insight-box.echo .insight-text{color:var(--muted);}
+
+/* ── SKELETON ── */
+.skel{
+  background:var(--surface);
+  padding:28px 0;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  border-bottom:0.5px solid var(--border);
+}
+.skel-line{
+  background:var(--surface2);
+  border-radius:4px;
+  animation:pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* ── EMPTY / ERROR ── */
+.state-box{
+  text-align:center;
+  padding:80px 20px;
+  color:var(--hint);
+}
+.state-icon{font-size:32px;margin-bottom:16px;}
+.state-title{font-size:16px;color:var(--muted);margin-bottom:8px;font-family:'Playfair Display',serif;}
+.state-sub{font-size:13px;color:var(--hint);}
+
+.error-box{
+  padding:14px 18px;
+  background:var(--red-dim);
+  border:0.5px solid rgba(224,85,85,0.3);
+  border-radius:var(--radius-sm);
+  color:var(--red);
+  font-size:13px;
+}
+
+/* ── FOOTER ── */
+footer{
+  border-top:0.5px solid var(--border);
+  padding:24px 32px;
+  text-align:center;
+  font-size:12px;
+  color:var(--hint);
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  header{padding:0 16px;}
+  .hero,.signals-section,.main{padding-left:16px;padding-right:16px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">
+    <div class="wordmark-dot"></div>
+    PULSE
+  </div>
+  <div class="header-right">India Market Intelligence</div>
+</header>
+
+<section class="hero">
+  <div class="hero-label">Powered by AI · Updated Daily</div>
+  <h1 class="hero-title">Global news.<br/>India implications.</h1>
+  <p class="hero-sub">Curated market intelligence for Indian retail investors — what happened, what it means for your portfolio, and what history says happens next.</p>
+</section>
+
+<section class="signals-section">
+  <div class="section-label">Weekly Sector Signals</div>
+  <div class="signals-grid" id="signals-grid">
+    <div class="signals-empty">Loading signals...</div>
+  </div>
+</section>
+
+<main class="main">
+  <div class="filter-row" id="filter-row">
+    <button class="topic-btn active" data-topic="all">All Topics</button>
+  </div>
+  <div id="feed"></div>
+</main>
+
+<footer>
+  PULSE is an AI-curated intelligence digest. All summaries are for informational purposes only and do not constitute financial advice. Always verify with primary sources before making investment decisions.
+</footer>
+
+<script>
+// ─────────────────────────────────────────────
+// !! REPLACE THESE TWO VALUES !!
+const SUPABASE_URL = 'https://wkcnnifoqtscztphbsab.supabase.co
+';
+const SUPABASE_ANON_KEY = 'sb_publishable_E-2IFIwjIkLZJ3d8yL3QiQ_Yr19ynxR';
+// ─────────────────────────────────────────────
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const TOPICS = [
+  'Finance & Banking',
+  'ESG & Sustainability',
+  'Oil & Gas',
+  'Consumer Tech',
+  'Markets & Commodities',
+  'Auto & EV',
+  'Pharma & Health',
+  'Private Equity'
+];
+
+let allArticles = [];
+let activeTopic = 'all';
+
+// ── SIGNALS ──
+async function loadSignals() {
+  const grid = document.getElementById('signals-grid');
+  try {
+    const { data, error } = await db
+      .from('sector_signals')
+      .select('*')
+      .order('week_of', { ascending: false })
+      .limit(20);
+
+    if (error) throw error;
+
+    // Get latest signal per sector
+    const latest = {};
+    (data || []).forEach(row => {
+      if (!latest[row.sector]) latest[row.sector] = row;
+    });
+
+    const rows = Object.values(latest);
+    if (!rows.length) {
+      grid.innerHTML = '<div class="signals-empty">No signals posted yet — check back soon.</div>';
+      return;
+    }
+
+    grid.innerHTML = rows.map(r => `
+      <div class="signal-chip ${r.signal}">
+        <div class="signal-dot"></div>
+        <span class="signal-name">${r.sector}</span>
+        <span class="signal-label">${r.signal}</span>
+      </div>`).join('');
+  } catch(e) {
+    grid.innerHTML = '<div class="signals-empty">Signals unavailable.</div>';
+  }
+}
+
+// ── ARTICLES ──
+async function loadArticles() {
+  const feed = document.getElementById('feed');
+  feed.innerHTML = skeletons();
+
+  try {
+    const { data, error } = await db
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+    allArticles = data || [];
+
+    buildTopicFilters();
+    renderArticles();
+  } catch(e) {
+    feed.innerHTML = `<div class="error-box">⚠ Could not load articles: ${e.message}. Check your Supabase URL and key.</div>`;
+  }
+}
+
+// ── TOPIC FILTERS ──
+function buildTopicFilters() {
+  const topics = [...new Set(allArticles.map(a => a.topic).filter(Boolean))];
+  const row = document.getElementById('filter-row');
+  row.innerHTML = `<button class="topic-btn active" data-topic="all">All Topics</button>` +
+    topics.map(t => `<button class="topic-btn" data-topic="${t}">${t}</button>`).join('');
+
+  row.querySelectorAll('.topic-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTopic = btn.dataset.topic;
+      row.querySelectorAll('.topic-btn').forEach(b => b.classList.toggle('active', b === btn));
+      renderArticles();
+    });
+  });
+}
+
+// ── RENDER ──
+function renderArticles() {
+  const feed = document.getElementById('feed');
+  const filtered = activeTopic === 'all'
+    ? allArticles
+    : allArticles.filter(a => a.topic === activeTopic);
+
+  if (!filtered.length) {
+    feed.innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">📭</div>
+        <div class="state-title">No articles yet</div>
+        <div class="state-sub">Content will appear here once published.</div>
+      </div>`;
+    return;
+  }
+
+  feed.innerHTML = `<div class="articles">${filtered.map((a, i) => card(a, i)).join('')}</div>`;
+}
+
+function card(a, i) {
+  const sentimentIcon = { positive: '↑', negative: '↓', neutral: '→' }[a.sentiment] || '→';
+  return `
+  <div class="card" style="animation-delay:${i * 45}ms; padding-left: 0; padding-right: 0;">
+    <div class="card-meta-top">
+      <span class="topic-tag">${a.topic || ''}</span>
+      <span class="source-date">${a.source || ''}${a.date ? ' · ' + a.date : ''}</span>
+      <span class="sentiment-badge ${a.sentiment || 'neutral'}">${sentimentIcon} ${a.sentiment || 'neutral'}</span>
+    </div>
+    <h2 class="card-title">${a.title || ''}</h2>
+    <p class="card-summary">${a.summary || ''}</p>
+    ${a.key_fact ? `<div class="card-key-fact">${a.key_fact}</div>` : ''}
+    <div class="card-insights">
+      ${a.india_impact ? `
+        <div class="insight-box india">
+          <div class="insight-label">🇮🇳 India Impact</div>
+          <div class="insight-text">${a.india_impact}</div>
+        </div>` : ''}
+      ${a.historical_echo ? `
+        <div class="insight-box echo">
+          <div class="insight-label">📅 Historical Echo</div>
+          <div class="insight-text">${a.historical_echo}</div>
+        </div>` : ''}
+    </div>
+  </div>`;
+}
+
+function skeletons() {
+  return [85,70,90,75].map((w, i) => `
+    <div class="skel" style="animation-delay:${i*80}ms">
+      <div class="skel-line" style="height:11px;width:30%"></div>
+      <div class="skel-line" style="height:22px;width:${w}%"></div>
+      <div class="skel-line" style="height:13px;width:100%"></div>
+      <div class="skel-line" style="height:13px;width:88%"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="skel-line" style="height:60px"></div>
+        <div class="skel-line" style="height:60px"></div>
+      </div>
+    </div>`).join('');
+}
+
+// ── INIT ──
+loadSignals();
+loadArticles();
+</script>
+</body>
+</html>
