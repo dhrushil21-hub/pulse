@@ -264,11 +264,11 @@ header{
 @media(max-width:600px){.card-insights{grid-template-columns:1fr;}}
 
 .insight-box{
-  padding:13px 15px;
+  padding:14px 16px;
   border-radius:var(--radius-sm);
   display:flex;
   flex-direction:column;
-  gap:5px;
+  gap:10px;
 }
 .insight-box.india{
   background:rgba(91,155,213,0.08);
@@ -283,15 +283,34 @@ header{
   letter-spacing:2px;
   text-transform:uppercase;
   font-weight:500;
+  margin-bottom:2px;
 }
 .insight-box.india .insight-label{color:var(--blue);}
 .insight-box.echo .insight-label{color:var(--muted);}
-.insight-text{
-  font-size:13px;
-  line-height:1.6;
+.insight-points{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
-.insight-box.india .insight-text{color:#a8c8e8;}
-.insight-box.echo .insight-text{color:var(--muted);}
+.insight-point{
+  font-size:13px;
+  line-height:1.65;
+  padding-left:12px;
+  position:relative;
+}
+.insight-point::before{
+  content:'';
+  position:absolute;
+  left:0;
+  top:8px;
+  width:3px;
+  height:3px;
+  border-radius:50%;
+}
+.insight-box.india .insight-point{color:#a8c8e8;}
+.insight-box.india .insight-point::before{background:var(--blue);opacity:0.6;}
+.insight-box.echo .insight-point{color:var(--muted);}
+.insight-box.echo .insight-point::before{background:var(--muted);opacity:0.5;}
 
 /* ── SKELETON ── */
 .skel{
@@ -495,6 +514,19 @@ function renderArticles() {
   feed.innerHTML = `<div class="articles">${filtered.map((a, i) => card(a, i)).join('')}</div>`;
 }
 
+function formatInsightText(text) {
+  if (!text) return '';
+  // Split on semicolons or sentence-ending periods followed by a capital letter
+  const chunks = text
+    .split(/;|(?<=\.)\s+(?=[A-Z])/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+  if (chunks.length <= 1) {
+    return `<div class="insight-points"><div class="insight-point">${text}</div></div>`;
+  }
+  return `<div class="insight-points">${chunks.map(c => `<div class="insight-point">${c.replace(/\.+$/, '')}.</div>`).join('')}</div>`;
+}
+
 function card(a, i) {
   const sentimentIcon = { positive: '↑', negative: '↓', neutral: '→' }[a.sentiment] || '→';
   return `
@@ -511,12 +543,12 @@ function card(a, i) {
       ${a.india_impact ? `
         <div class="insight-box india">
           <div class="insight-label">🇮🇳 India Impact</div>
-          <div class="insight-text">${a.india_impact}</div>
+          ${formatInsightText(a.india_impact)}
         </div>` : ''}
       ${a.historical_echo ? `
         <div class="insight-box echo">
           <div class="insight-label">📅 Historical Echo</div>
-          <div class="insight-text">${a.historical_echo}</div>
+          ${formatInsightText(a.historical_echo)}
         </div>` : ''}
     </div>
   </div>`;
